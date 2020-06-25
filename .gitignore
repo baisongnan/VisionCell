@@ -1,0 +1,9 @@
+
+# MATLAB temp files
+*.m~
+
+*.mp4
+
+*.mov
+
+.DS_Store
