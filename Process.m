@@ -1,5 +1,6 @@
 % AreaMeasurement(video,frame)
 % ScaleIdentification(video,1);
+
 %% pre processing
 clc;
 clear;
@@ -9,23 +10,24 @@ filePath = fullfile('VideoFile','20200615_111546.mp4');
 video = VideoReader(filePath);
 
 frameEnd = video.NumFrames;
-
 scalebar = ScaleIdentification(video,1);
 % scalebar = 1;
 
-frame=2;
+startFrame = 2;
+
+frame=startFrame;
 while true
-    [operation, frame] = videoPlayer(video, frame, frameEnd);
+    [operation, frame] = videoPlayer(video, frame, frameEnd,startFrame);
     switch operation
         case 1 % cell length
             [cellNum, frame, lengthCellX, lengthCellY, ...
                 lengthCellX_actual, lengthCellY_actual, lengthCell, lengthCell_actual]=AreaMeasurement2(video,frame,scalebar);
-          
+            
             cellList(cellNum).frame_length = frame;
-%             cellList(cellNum).lengthCellX = lengthCellX;
-%             cellList(cellNum).lengthCellY = lengthCellY;
-%             cellList(cellNum).lengthCellX_actual = lengthCellX_actual;
-%             cellList(cellNum).lengthCellY_actual = lengthCellY_actual;
+            %             cellList(cellNum).lengthCellX = lengthCellX;
+            %             cellList(cellNum).lengthCellY = lengthCellY;
+            %             cellList(cellNum).lengthCellX_actual = lengthCellX_actual;
+            %             cellList(cellNum).lengthCellY_actual = lengthCellY_actual;
             cellList(cellNum).lengthCell = lengthCell;
             cellList(cellNum).lengthCell_actual = lengthCell_actual;
             clear lengthCellX lengthCellY lengthCellX_actual lengthCellX_actual lengthCell lengthCell_actual
@@ -76,7 +78,7 @@ end
 
 
 %%
-function [x, i]= videoPlayer(video, frameStart, frameEnd)
+function [x, i]= videoPlayer(video, frameStart, frameEnd, startFrame)
 figure(1)
 clc;
 prompt = 'Input num. for the required operations: ';
@@ -88,22 +90,45 @@ while true
     imshow(videoFrame);
     title(['Frame: ',num2str(i)])
     functionList();
-    x = input(prompt);
-    if x == 0
+    keypressed = getkey(1,'non-ascii');
+    
+    if strcmp('0',keypressed)
         PlayDirection=input('input play steps: ');
         x = [];
+    elseif strcmp('rightarrow',keypressed)
+        i=i+PlayDirection;
+    elseif strcmp('leftarrow',keypressed)
+        i=i-PlayDirection;
+    elseif strcmp('1',keypressed)
+        x = 1;
+        return;
+    elseif strcmp('2',keypressed)
+        x = 2;
+        return;
+    elseif strcmp('3',keypressed)
+        x = 3;
+        return;
+    elseif strcmp('4',keypressed)
+        x = 4;
+        return;
+    elseif strcmp('5',keypressed)
+        x = 5;
+        return;
+    elseif strcmp('9',keypressed)
+        x = 9;
+        return;
+    else
+        
+        continue;
     end
     
     
-    if ~isempty(x)
-        break;
-    end
+    
     cla;
     clc;
-    i=i+PlayDirection;
     
-    if i <= 1
-        i = 1;
+    if i <= startFrame
+        i = startFrame;
     end
     if i >= frameEnd
         i = frameEnd;
@@ -116,7 +141,7 @@ end
 function [cellNum, frame, pixelLength, actualLength, pixelLength_x,...
     actualLength_x, pixelLength_y, actualLength_y] = DistanceMeasurement(video,frame,scalebar)
 clc;
-cellNum = input('input cell number : ');
+cellNum = inputCellNum();
 figure(2)
 videoFrame = read(video,frame);
 imshow(videoFrame);hold on;
@@ -235,7 +260,7 @@ end
 function [cellNum, frame, lengthCellX, lengthCellY, ...
     lengthCellX_actual, lengthCellY_actual, lengthCell, lengthCell_actual]=AreaMeasurement2(video,frame,scalebar)
 clc;
-cellNum = input('input cell number : ');
+cellNum = inputCellNum();
 
 frameDiffStart = 20;
 frameDiffEnd = 20;
@@ -340,7 +365,7 @@ end
 
 
 function [cellNum, frame, endFrame, SpeedResult]=SpeedMeasurement(video,frame,scalebar)
-cellNum = input('input cell number : ');
+cellNum = inputCellNum();
 
 figure(2)
 videoFrame = read(video,frame);
@@ -350,60 +375,60 @@ disp('please select the region for speed measurement');
 [x,y]= four_point_region();
 patch(x,y,'r','FaceAlpha',0.1);
 disp('press enter to continue')
-pause() 
+pause()
 
 cla;
 figure(2)
 clc;
 PlayDirection = 1;
 while true
-i=frame;
-disp('this is the start frame for speed measurement')
-
-while true
-    clc;
-    videoFrame = read(video,i);
-    imshow(videoFrame);
-    patch(x,y,'r','FaceAlpha',0.1);
-    title(['Start Frame: ' ,num2str(frame),  '  Current Frame: ',num2str(i)])
+    i=frame;
+    disp('this is the start frame for speed measurement')
     
-    disp('0, play settings')
-    disp('1, end frame of speed measurement')
-    disp('9, exit')
-    sel = input('input or press enter to go next frame: ');
-    if isempty(sel)
-        i = i + PlayDirection;
-        if i<1
-            i = 1;
-        elseif i > video.NumFrames
-            i = video.NumFrames;
+    while true
+        clc;
+        videoFrame = read(video,i);
+        imshow(videoFrame);
+        patch(x,y,'r','FaceAlpha',0.1);
+        title(['Start Frame: ' ,num2str(frame),  '  Current Frame: ',num2str(i)])
+        
+        disp('0, play settings')
+        disp('1, end frame of speed measurement')
+        disp('9, exit')
+        sel = input('input or press enter to go next frame: ');
+        if isempty(sel)
+            i = i + PlayDirection;
+            if i<1
+                i = 1;
+            elseif i > video.NumFrames
+                i = video.NumFrames;
+            end
+        else
+            switch sel
+                case 1
+                    break;
+                case 9
+                    close 2;
+                    endFrame=-1;
+                    SpeedResult = [];
+                    return;
+                case 0
+                    PlayDirection = input('input frame steps: ');
+                otherwise
+            end
         end
-    else
-        switch sel
-            case 1
-                break;
-            case 9
-                close 2;
-                endFrame=-1;
-                SpeedResult = [];
-                return;
-            case 0
-                PlayDirection = input('input frame steps: ');
-            otherwise
-        end
+        cla;
     end
-    cla;
-end
-endFrame = i;
-clear i
-
-
-if endFrame <= frame +1
-    disp('too short, please select again (press enter to continue)')
-    pause()
-else
-    break;
-end
+    endFrame = i;
+    clear i
+    
+    
+    if endFrame <= frame +1
+        disp('too short, please select again (press enter to continue)')
+        pause()
+    else
+        break;
+    end
 end
 
 maxX = round(max(x));
@@ -487,7 +512,7 @@ while true % speed measurement
     disp(['speed Y : ',num2str(fitobjectY.p1)])
     IIs = input('is this result acceptable? (press enter to accept, input 1 to decline)');
     if isempty(IIs)
-        close 4 
+        close 4
         break;
     else
         cla;
@@ -501,7 +526,7 @@ end
 
 function [cellNum, frame, Xlength, Ylength, Xlength_actual, Ylength_actual]=CellLength(video,frame,scalebar)
 clc;
-cellNum = input('input cell number : ');
+cellNum = inputCellNum();
 
 
 figure(2)
@@ -543,4 +568,23 @@ pause();
 close 3
 close 2
 return
+end
+
+
+function x=inputCellNum()
+a = true;
+while a
+    try
+        x = input('input cell number : ');
+        if isempty(x)
+            a = true;
+        else
+            a = false;
+        end
+    catch
+        warning('incorrect input!, try again');
+        a = true;
+    end
+end
+
 end
