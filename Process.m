@@ -43,7 +43,7 @@ while true
             cellList(cellNum).actualDistance_y = actualLength_y;
             clear pixelLength actualLength pixelLength_x actualLength_x pixelLength_y actualLength_y
         case 3 % speed
-            [cellNum, frame, endFrame, SpeedResult] = SpeedMeasurement(video,frame,scalebar);
+            [cellNum, frame, endFrame, SpeedResult] = SpeedMeasurement(video,frame,scalebar,startFrame);
             cellList(cellNum).frame_speed = frame;
             cellList(cellNum).frame_speed_end = endFrame;
             cellList(cellNum).SpeedResult = SpeedResult;
@@ -141,7 +141,7 @@ end
 function [cellNum, frame, pixelLength, actualLength, pixelLength_x,...
     actualLength_x, pixelLength_y, actualLength_y] = DistanceMeasurement(video,frame,scalebar)
 clc;
-cellNum = inputCellNum();
+cellNum = inputGenerat('input cell number : ');
 figure(2)
 videoFrame = read(video,frame);
 imshow(videoFrame);hold on;
@@ -260,7 +260,7 @@ end
 function [cellNum, frame, lengthCellX, lengthCellY, ...
     lengthCellX_actual, lengthCellY_actual, lengthCell, lengthCell_actual]=AreaMeasurement2(video,frame,scalebar)
 clc;
-cellNum = inputCellNum();
+cellNum = inputGenerat('input cell number : ');
 
 frameDiffStart = 20;
 frameDiffEnd = 20;
@@ -364,8 +364,8 @@ end
 
 
 
-function [cellNum, frame, endFrame, SpeedResult]=SpeedMeasurement(video,frame,scalebar)
-cellNum = inputCellNum();
+function [cellNum, frame, endFrame, SpeedResult]=SpeedMeasurement(video,frame,scalebar,startFrame)
+cellNum = inputGenerat('input cell number : ');
 
 figure(2)
 videoFrame = read(video,frame);
@@ -382,7 +382,7 @@ figure(2)
 clc;
 PlayDirection = 1;
 while true
-    i=frame;
+    i=frame+1;
     disp('this is the start frame for speed measurement')
     
     while true
@@ -395,35 +395,56 @@ while true
         disp('0, play settings')
         disp('1, end frame of speed measurement')
         disp('9, exit')
-        sel = input('input or press enter to go next frame: ');
-        if isempty(sel)
+        disp('input or press enter to go next frame: ');
+        %         sel = input('input or press enter to go next frame: ');
+        
+        keypressed = getkey(1,'non-ascii');
+        sel = 2;
+        if strcmp(keypressed,'0')
+            sel = 0;
+        elseif strcmp(keypressed,'1')
+            sel = 1;
+        elseif strcmp(keypressed,'9')
+            sel = 9;
+        elseif strcmp('rightarrow',keypressed)
             i = i + PlayDirection;
-            if i<1
-                i = 1;
-            elseif i > video.NumFrames
-                i = video.NumFrames;
-            end
+            
+        elseif strcmp('leftarrow',keypressed)
+            i = i - PlayDirection;
         else
-            switch sel
-                case 1
-                    break;
-                case 9
-                    close 2;
-                    endFrame=-1;
-                    SpeedResult = [];
-                    return;
-                case 0
-                    PlayDirection = input('input frame steps: ');
-                otherwise
-            end
+            
         end
+        
+        
+        
+        
+        if i<frame+1
+            i = frame+1;
+        elseif i > video.NumFrames
+            i = video.NumFrames;
+        end
+        
+        switch sel
+            case 1
+                break;
+            case 9
+                close 2;
+                endFrame=-1;
+                SpeedResult = [];
+                return;
+            case 0
+%                 PlayDirection = input('input frame steps: ');
+                PlayDirection=inputGenerat('input frame steps: ');
+            otherwise
+        end
+        
         cla;
     end
     endFrame = i;
     clear i
     
     
-    if endFrame <= frame +1
+    if endFrame <= frame +2
         disp('too short, please select again (press enter to continue)')
         pause()
     else
@@ -437,7 +458,8 @@ maxY = round(max(y));
 minY = round(min(y));
 
 while true % speed measurement
-    threshold = input('Set threshold (0~0.2): ');
+%     threshold = input('Set threshold (0~0.2): ');
+    threshold =inputGenerat('Set threshold (0~0.2): ');
     videoFrames=zeros(video.Height,video.Width,  endFrame - frame +1);
     frameList = frame:1:endFrame;
     for i = 1:1:length(frameList)
@@ -448,7 +470,8 @@ while true % speed measurement
     cutDiffIM = diffIM(minY:maxY,minX:maxX,:);
     diffIMBW = imbinarize(cutDiffIM,threshold);
     
-    filterlevel = input('Set filter level (1~5): ');
+%     filterlevel = input('Set filter level (1~5): ');
+    filterlevel =inputGenerat('Set filter level (1~5): ');
     SE = strel('diamond',filterlevel);
     
     centerPositionX = zeros(1,endFrame - frame +1);
@@ -526,7 +549,7 @@ end
 
 function [cellNum, frame, Xlength, Ylength, Xlength_actual, Ylength_actual]=CellLength(video,frame,scalebar)
 clc;
-cellNum = inputCellNum();
+cellNum = inputGenerat('input cell number : ');
 
 
 figure(2)
@@ -571,11 +594,29 @@ return
 end
 
 
-function x=inputCellNum()
+% function x=inputCellNum()
+% a = true;
+% while a
+%     try
+%         x = input('input cell number : ');
+%         if isempty(x)
+%             a = true;
+%         else
+%             a = false;
+%         end
+%     catch
+%         warning('incorrect input!, try again');
+%         a = true;
+%     end
+% end
+% 
+% end
+
+function x=inputGenerat(strrr)
 a = true;
 while a
     try
-        x = input('input cell number : ');
+        x = input(strrr);
         if isempty(x)
             a = true;
         else
