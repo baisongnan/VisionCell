@@ -43,10 +43,12 @@ while true
             cellList(cellNum).actualDistance_y = actualLength_y;
             clear pixelLength actualLength pixelLength_x actualLength_x pixelLength_y actualLength_y
         case 3 % speed
-            [cellNum, frame, endFrame, SpeedResult] = SpeedMeasurement(video,frame,scalebar,startFrame);
+            [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual] = SpeedMeasurement(video,frame,scalebar);
             cellList(cellNum).frame_speed = frame;
             cellList(cellNum).frame_speed_end = endFrame;
             cellList(cellNum).SpeedResult = SpeedResult;
+            cellList(cellNum).vx_actual=vx_actual;
+            cellList(cellNum).vy_actual=vy_actual;
             
         case 4 % area
             [cellNum, frame, Area]=AreaMeasurement(video,frame,scalebar);
@@ -62,6 +64,13 @@ while true
             cellList(cellNum).Ylength_actual = Ylength_actual;
             cellList(cellNum).Length_actual = sqrt(Xlength_actual^2+Ylength_actual^2);
             clear Xlength Ylength Xlength_actual Ylength_actual
+        case 6 % average speed
+            [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual] = averageSpeed(video,frame,scalebar);
+            cellList(cellNum).frame_speed = frame;
+            cellList(cellNum).frame_speed_end = endFrame;
+            cellList(cellNum).SpeedResult = SpeedResult;
+            cellList(cellNum).vx_actual=vx_actual;
+            cellList(cellNum).vy_actual=vy_actual;
         case 9
             break;
         otherwise
@@ -113,6 +122,9 @@ while true
         return;
     elseif strcmp('5',keypressed)
         x = 5;
+        return;
+    elseif strcmp('6',keypressed)
+        x = 6;
         return;
     elseif strcmp('9',keypressed)
         x = 9;
@@ -229,6 +241,7 @@ disp('2, Measuring distance')
 disp('3, Measuring speed')
 disp('4, Measuring cell area (manual)')
 disp('5, Measuring cell length (manual)')
+disp('6, Measuring avergae speed (manual)')
 disp('9, Exit')
 disp('0, play settings')
 end
@@ -364,7 +377,7 @@ end
 
 
 
-function [cellNum, frame, endFrame, SpeedResult]=SpeedMeasurement(video,frame,scalebar,startFrame)
+function [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual]=SpeedMeasurement(video,frame,scalebar)
 cellNum = inputGenerat('input cell number : ');
 
 figure(2)
@@ -433,7 +446,7 @@ while true
                 SpeedResult = [];
                 return;
             case 0
-%                 PlayDirection = input('input frame steps: ');
+                %                 PlayDirection = input('input frame steps: ');
                 PlayDirection=inputGenerat('input frame steps: ');
             otherwise
         end
@@ -458,7 +471,7 @@ maxY = round(max(y));
 minY = round(min(y));
 
 while true % speed measurement
-%     threshold = input('Set threshold (0~0.2): ');
+    %     threshold = input('Set threshold (0~0.2): ');
     threshold =inputGenerat('Set threshold (0~0.2): ');
     videoFrames=zeros(video.Height,video.Width,  endFrame - frame +1);
     frameList = frame:1:endFrame;
@@ -470,7 +483,7 @@ while true % speed measurement
     cutDiffIM = diffIM(minY:maxY,minX:maxX,:);
     diffIMBW = imbinarize(cutDiffIM,threshold);
     
-%     filterlevel = input('Set filter level (1~5): ');
+    %     filterlevel = input('Set filter level (1~5): ');
     filterlevel =inputGenerat('Set filter level (1~5): ');
     SE = strel('diamond',filterlevel);
     
@@ -542,6 +555,9 @@ while true % speed measurement
     end
 end
 
+vx_actual = fitobjectX.p1;
+vy_actual = fitobjectY.p1;
+close 2
 return;
 end
 
@@ -609,7 +625,7 @@ end
 %         a = true;
 %     end
 % end
-% 
+%
 % end
 
 function x=inputGenerat(strrr)
@@ -628,4 +644,118 @@ while a
     end
 end
 
+end
+
+
+function [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual] = averageSpeed(video,frame,scalebar)
+cellNum = inputGenerat('input cell number : ');
+SpeedResult = [];
+figure(2)
+videoFrame = read(video,frame);
+imshow(videoFrame);hold on
+title('four points region');
+disp('please select the cell');
+% [x,y]= four_point_region();
+% patch(x,y,'r','FaceAlpha',0.1);
+
+[xx,yy]=ginput(1);
+plot(xx,yy,'b*')
+
+
+cla;
+figure(2)
+clc;
+PlayDirection = 1;
+while true
+    i=frame+1;
+    disp('this is the start frame for speed measurement')
+    
+    while true
+        clc;
+        videoFrame = read(video,i);
+        imshow(videoFrame);hold on
+        plot(xx,yy,'b*')
+        title(['Start Frame: ' ,num2str(frame),  '  Current Frame: ',num2str(i)])
+        
+        disp('0, play settings')
+        disp('1, end frame of speed measurement')
+        disp('9, exit')
+        disp('input or press enter to go next frame: ');
+        %         sel = input('input or press enter to go next frame: ');
+        
+        keypressed = getkey(1,'non-ascii');
+        sel = 2;
+        if strcmp(keypressed,'0')
+            sel = 0;
+        elseif strcmp(keypressed,'1')
+            sel = 1;
+        elseif strcmp(keypressed,'9')
+            sel = 9;
+        elseif strcmp('rightarrow',keypressed)
+            i = i + PlayDirection;
+            
+        elseif strcmp('leftarrow',keypressed)
+            i = i - PlayDirection;
+        else
+            
+        end
+        
+        
+        
+        
+        if i<frame+1
+            i = frame+1;
+        elseif i > video.NumFrames
+            i = video.NumFrames;
+        end
+        
+        switch sel
+            case 1
+                break;
+            case 9
+                close 2;
+                endFrame=-1;
+                SpeedResult = [];
+                return;
+            case 0
+                %                 PlayDirection = input('input frame steps: ');
+                PlayDirection=inputGenerat('input frame steps: ');
+            otherwise
+        end
+        
+        cla;
+    end
+    endFrame = i;
+    clear i
+    
+    
+    if endFrame <= frame +2
+        disp('too short, please select again (press enter to continue)')
+        pause()
+    else
+        break;
+    end
+end
+
+
+disp('please select the cell');
+[xx2,yy2]=ginput(1);
+plot(xx2,yy2,'b*')
+
+dx=xx2-xx;
+dy=yy2-yy;
+dt=(endFrame-frame)/video.FrameRate;
+
+vx = (dx/dt);
+vy = (dy/dt);
+vx_actual = (vx*scalebar);
+vy_actual = (vy*scalebar);
+
+
+clc
+disp(['X speed ',num2str(vx_actual)])
+disp(['Y speed ',num2str(vy_actual)])
+disp('press enter to continue')
+pause()
+close 2
 end
