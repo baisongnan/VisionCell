@@ -378,6 +378,8 @@ end
 
 
 function [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual]=SpeedMeasurement(video,frame,scalebar)
+vx_actual = [];
+vy_actual = [];
 cellNum = inputGenerat('input cell number : ');
 
 figure(2)
@@ -529,34 +531,41 @@ while true % speed measurement
         end
     end
     
-    fitobjectX = fit(SpeedResult.time',SpeedResult.centerPositionX_actual','poly1');
-    fitobjectY = fit(SpeedResult.time',SpeedResult.centerPositionY_actual','poly1');
-    SpeedResult.speedX = fitobjectX.p1;
-    SpeedResult.speedY = fitobjectY.p1;
-    
-    
-    figure(4)
-    subplot(2,1,1)
-    plot(fitobjectX,SpeedResult.time, SpeedResult.centerPositionX_actual)
-    ylabel('position X')
-    subplot(2,1,2)
-    plot(fitobjectY,SpeedResult.time, SpeedResult.centerPositionY_actual)
-    xlabel('time (s)')
-    ylabel('position Y')
-    
-    disp(['speed X : ',num2str(fitobjectX.p1)])
-    disp(['speed Y : ',num2str(fitobjectY.p1)])
-    IIs = input('is this result acceptable? (press enter to accept, input 1 to decline)');
-    if isempty(IIs)
-        close 4
+    if length(SpeedResult.time)<2
+        disp('too short to compute, press enter to exit, (try function 6)')
+        pause()
         break;
     else
-        cla;
+        fitobjectX = fit(SpeedResult.time',SpeedResult.centerPositionX_actual','poly1');
+        fitobjectY = fit(SpeedResult.time',SpeedResult.centerPositionY_actual','poly1');
+        SpeedResult.speedX = fitobjectX.p1;
+        SpeedResult.speedY = fitobjectY.p1;
+        
+        
+        figure(4)
+        subplot(2,1,1)
+        plot(fitobjectX,SpeedResult.time, SpeedResult.centerPositionX_actual)
+        ylabel('position X')
+        subplot(2,1,2)
+        plot(fitobjectY,SpeedResult.time, SpeedResult.centerPositionY_actual)
+        xlabel('time (s)')
+        ylabel('position Y')
+        
+        disp(['speed X : ',num2str(fitobjectX.p1)])
+        disp(['speed Y : ',num2str(fitobjectY.p1)])
+        IIs = input('is this result acceptable? (press enter to accept, input 1 to decline)');
+        if isempty(IIs)
+            close 4
+            break;
+        else
+            cla;
+        end
+        vx_actual = fitobjectX.p1;
+        vy_actual = fitobjectY.p1;
     end
 end
 
-vx_actual = fitobjectX.p1;
-vy_actual = fitobjectY.p1;
+
 close 2
 return;
 end
