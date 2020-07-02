@@ -459,7 +459,7 @@ while true
     clear i
     
     
-    if endFrame <= frame +2
+    if endFrame <= frame +1
         disp('too short, please select again (press enter to continue)')
         pause()
     else
@@ -555,13 +555,14 @@ while true % speed measurement
         disp(['speed Y : ',num2str(fitobjectY.p1)])
         IIs = input('is this result acceptable? (press enter to accept, input 1 to decline)');
         if isempty(IIs)
+            vx_actual = fitobjectX.p1;
+            vy_actual = fitobjectY.p1;
             close 4
             break;
         else
             cla;
         end
-        vx_actual = fitobjectX.p1;
-        vy_actual = fitobjectY.p1;
+        
     end
 end
 
@@ -676,7 +677,7 @@ figure(2)
 clc;
 PlayDirection = 1;
 while true
-    i=frame+1;
+    i=frame;
     disp('this is the start frame for speed measurement')
     
     while true
@@ -738,7 +739,7 @@ while true
     clear i
     
     
-    if endFrame <= frame +2
+    if endFrame <= frame +0
         disp('too short, please select again (press enter to continue)')
         pause()
     else
