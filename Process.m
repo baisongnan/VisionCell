@@ -5,7 +5,8 @@
 clc;
 clear;
 close all;
-
+global cellNumList
+cellNumList = [];
 filePath = fullfile('VideoFile','20200615_111546.mp4');
 video = VideoReader(filePath);
 
@@ -22,7 +23,7 @@ while true
         case 1 % cell length
             [cellNum, frame, lengthCellX, lengthCellY, ...
                 lengthCellX_actual, lengthCellY_actual, lengthCell, lengthCell_actual]=AreaMeasurement2(video,frame,scalebar);
-            
+            cellNumList(cellNum) = cellNum;
             cellList(cellNum).frame_length = frame;
             %             cellList(cellNum).lengthCellX = lengthCellX;
             %             cellList(cellNum).lengthCellY = lengthCellY;
@@ -34,6 +35,7 @@ while true
         case 2 % distance
             [cellNum, frame, pixelLength, actualLength, pixelLength_x,...
                 actualLength_x, pixelLength_y, actualLength_y] = DistanceMeasurement(video,frame,scalebar);
+            cellNumList(cellNum) = cellNum;
             cellList(cellNum).frame_distance = frame;
             cellList(cellNum).pixelDistance = pixelLength;
             cellList(cellNum).actualDistance = actualLength;
@@ -44,6 +46,7 @@ while true
             clear pixelLength actualLength pixelLength_x actualLength_x pixelLength_y actualLength_y
         case 3 % speed
             [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual] = SpeedMeasurement(video,frame,scalebar);
+            cellNumList(cellNum) = cellNum;
             cellList(cellNum).frame_speed = frame;
             cellList(cellNum).frame_speed_end = endFrame;
             cellList(cellNum).SpeedResult = SpeedResult;
@@ -52,11 +55,13 @@ while true
             
         case 4 % area
             [cellNum, frame, Area]=AreaMeasurement(video,frame,scalebar);
+            cellNumList(cellNum) = cellNum;
             cellList(cellNum).frame_area = frame;
             cellList(cellNum).Area = Area;
             clear Area
         case 5 % length manual
             [cellNum, frame, Xlength, Ylength, Xlength_actual, Ylength_actual]=CellLength(video,frame,scalebar);
+            cellNumList(cellNum) = cellNum;
             cellList(cellNum).frame_length = frame;
             cellList(cellNum).Xlength = Xlength;
             cellList(cellNum).Ylength = Ylength;
@@ -66,6 +71,7 @@ while true
             clear Xlength Ylength Xlength_actual Ylength_actual
         case 6 % average speed
             [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual] = averageSpeed(video,frame,scalebar);
+            cellNumList(cellNum) = cellNum;
             cellList(cellNum).frame_speed = frame;
             cellList(cellNum).frame_speed_end = endFrame;
             cellList(cellNum).SpeedResult = SpeedResult;
@@ -87,6 +93,17 @@ end
 
 
 %%
+function currentCells()
+global cellNumList
+disp('current cells:')
+if isempty(cellNumList)
+    disp('No cells')
+else
+    disp(cellNumList)
+end
+end
+
+
 function [x, i]= videoPlayer(video, frameStart, frameEnd, startFrame)
 figure(1)
 clc;
@@ -153,6 +170,7 @@ end
 function [cellNum, frame, pixelLength, actualLength, pixelLength_x,...
     actualLength_x, pixelLength_y, actualLength_y] = DistanceMeasurement(video,frame,scalebar)
 clc;
+currentCells()
 cellNum = inputGenerat('input cell number : ');
 figure(2)
 videoFrame = read(video,frame);
@@ -178,6 +196,7 @@ close 2
 end
 function [cellNum, frame, Area]=AreaMeasurement(video,frame,scalebar)
 clc;
+currentCells()
 cellNum = input('input cell number : ');
 
 
@@ -273,6 +292,7 @@ end
 function [cellNum, frame, lengthCellX, lengthCellY, ...
     lengthCellX_actual, lengthCellY_actual, lengthCell, lengthCell_actual]=AreaMeasurement2(video,frame,scalebar)
 clc;
+currentCells()
 cellNum = inputGenerat('input cell number : ');
 
 frameDiffStart = 20;
@@ -380,6 +400,7 @@ end
 function [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual]=SpeedMeasurement(video,frame,scalebar)
 vx_actual = [];
 vy_actual = [];
+currentCells()
 cellNum = inputGenerat('input cell number : ');
 
 figure(2)
@@ -575,6 +596,7 @@ end
 
 function [cellNum, frame, Xlength, Ylength, Xlength_actual, Ylength_actual]=CellLength(video,frame,scalebar)
 clc;
+currentCells()
 cellNum = inputGenerat('input cell number : ');
 
 
@@ -658,6 +680,7 @@ end
 
 
 function [cellNum, frame, endFrame, SpeedResult,vx_actual,vy_actual] = averageSpeed(video,frame,scalebar)
+currentCells()
 cellNum = inputGenerat('input cell number : ');
 SpeedResult = [];
 figure(2)
